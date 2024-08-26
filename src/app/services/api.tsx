@@ -2,14 +2,22 @@ const BASE_URL = 'http://localhost:5000/api'; // URL de base du backend
 
 // Fonction pour récupérer tous les menus
 export async function fetchMenus() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondes timeout
+
   try {
-    const response = await fetch(`${BASE_URL}/menus`);
+    const response = await fetch(`${BASE_URL}/menus`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    
     if (!response.ok) {
       throw new Error('Failed to fetch menus');
     }
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
+    if (error === 'AbortError') {
+      console.error('Request timed out');
+      throw new Error('Request timed out');
+    }
     console.error('Error fetching menus:', error);
     throw error;
   }
